@@ -6,7 +6,7 @@ jobs:
     name: Test calc-NEP29 action
     steps:
       - name: Calculate NEP29 releases
-        uses: mstimberg/github-calc-nep29@v0.1
+        uses: mstimberg/github-calc-nep29@main
         id: nep29
         with:
             token: ${{ secrets.GITHUB_TOKEN }}
