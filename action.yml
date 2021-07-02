@@ -1,0 +1,46 @@
+name: 'Calculate NEP29'
+description: 'Calculate Python + numpy releases according to NEP 29'
+inputs:
+    deprecate-python-after:
+        description: 'Deprecate Python releases after how many months? Defaults to 42.'
+        required: false
+        default: '42'
+    min-python-releases:
+        description: 'Minimum number of minor versions of Python to support? Defaults to 2.'
+        required: false
+        default: '2'
+    deprecate-numpy-after:
+        description: 'Deprecate numpy releases after how many months? Defaults to 24.'
+        required: false
+        default: '24'
+    min-numpy-releases:
+        description: 'Minimum number of minor versions of numpy to support? Defaults to 3.'
+        required: false
+        default: '3'
+    release-date:
+        description: 'Targeted release date in format YYYY-MM-DD. Defaults to the current date.'
+        required: false
+        default: ''
+    export-to-env:
+        description: 'Whether to export environment variables in addition to setting the action output. Defaults to true.'
+        required: false
+        default: 'true'
+    token:
+        description: 'The GitHub API token'
+        required: true
+outputs:
+    min-python:
+        description: 'the minimal (oldest) Python version that should be supported'
+    max-python:
+        description: 'the maximal (newest) Python version that should be supported'
+    min-numpy:
+        description: 'the minimal (oldest) numpy version that should be supported'
+    max-numpy:
+        description: 'the maximal (newest) numpy version that should be supported'
+runs:
+    using: 'node12'
+    main: 'dist/index.js'
+
+branding:
+    icon: 'hash'
+    color: 'blue'
