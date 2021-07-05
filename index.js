@@ -1,6 +1,9 @@
 const core = require("@actions/core");
 const { Octokit } = require("@octokit/rest");
 
+// Number of ms in a day
+const one_day_ms = 24 * 60 * 60 * 1000;
+
 // A few helper functions
 function ms_to_months(ms) {
   return ms / 1000 / 60 / 60 / 24 / (365 / 12);
@@ -16,9 +19,9 @@ function datestr_to_timestamp(datestr) {
   const regex = /^(\d{4})-(\d{2})-(\d{2})(?:T[\d:]+Z)?$/;
   const found = datestr.match(regex);
   return new Date(
-      parseInt(found[1]),
-      parseInt(found[2]) - 1, //monthidx, i.e. 0-based
-      parseInt(found[3])
+    parseInt(found[1]),
+    parseInt(found[2]) - 1, //monthidx, i.e. 0-based
+    parseInt(found[3])
   );
 }
 
@@ -44,39 +47,45 @@ class NEP29Calculator {
   }
 
   async sorted_releases(org, repo) {
-    const releases = await this.octokit.paginate(this.octokit.rest.repos.listReleases, {
-      owner: org,
-      repo: repo,
-      per_page: 100,
-    });
-    if (releases.length) {
-      const reduced = releases
-          .map((x) => {
-            x.name = x.tag_name;
-            return x;
-          })
-          .filter(first_release)
-          .map(function (x) {
-            const parts = x.name.substring(1).split(".");
-            return { major: parts[0], minor: parts[1], date: x.published_at };
-          });
-      reduced.sort((r1, r2) => r1.minor - r2.minor);
-      return reduced;
-    } else {
-      const tags = await this.octokit.paginate(this.octokit.rest.repos.listTags, {
+    const releases = await this.octokit.paginate(
+      this.octokit.rest.repos.listReleases,
+      {
         owner: org,
         repo: repo,
         per_page: 100,
-      });
+      }
+    );
+    if (releases.length) {
+      const reduced = releases
+        .map((x) => {
+          x.name = x.tag_name;
+          return x;
+        })
+        .filter(first_release)
+        .map(function (x) {
+          const parts = x.name.substring(1).split(".");
+          return { major: parts[0], minor: parts[1], date: x.published_at };
+        });
+      reduced.sort((r1, r2) => r1.minor - r2.minor);
+      return reduced;
+    } else {
+      const tags = await this.octokit.paginate(
+        this.octokit.rest.repos.listTags,
+        {
+          owner: org,
+          repo: repo,
+          per_page: 100,
+        }
+      );
       const reduced = await Promise.all(
-          tags.filter(first_release).map((x) => this.name_and_date(x))
+        tags.filter(first_release).map((x) => this.name_and_date(x))
       );
       reduced.sort((r1, r2) => r1.minor - r2.minor);
       return reduced;
     }
   }
 
-  async calc_releases(releases, months, min_releases, release_date) {
+  async calc_releases(releases, months, min_releases, release_date, name) {
     let resolved = await releases;
     // transform dates into millisecond timestamps
     resolved = resolved.map((r) => {
@@ -89,24 +98,48 @@ class NEP29Calculator {
         release_date = datestr_to_timestamp(release_date);
       } catch (e) {
         throw new Error(
-            `Could not parse release date '${release_date}', please use a 'YYYY-MM-DD' format.`
+          `Could not parse release date '${release_date}', please use a 'YYYY-MM-DD' format.`
         );
       }
     }
-    core.debug(`Assuming release date: ${new Date(release_date).toDateString()}`);
-    let accepted_releases = resolved.filter(
-        (r) => ms_to_months(release_date - r.date) <= months
+    const release_date_str = new Date(release_date).toDateString();
+    core.debug(`Assuming release date: ${release_date_str}`);
+    if (release_date > Date.now() + one_day_ms) {
+      core.warning(
+        `The assumed release date ${release_date_str} is in the future, you should probably ignore max-${name}.`
+      );
+    }
+    // Filter out releases that did not exist back at the time for release dates in the past
+    const existing_releases = resolved.filter((r) => release_date - r.date > 0);
+    let accepted_releases = existing_releases.filter(
+      (r) => ms_to_months(release_date - r.date) <= months
     );
     if (accepted_releases.length < min_releases) {
-      accepted_releases = resolved.slice(resolved.length - min_releases);
+      accepted_releases = existing_releases.slice(
+        existing_releases.length - min_releases
+      );
+      if (accepted_releases.length < min_releases) {
+        core.warning(
+          `Did only find ${
+            accepted_releases.length
+          } ${name} releases, not ${min_releases}, that already existed on ${new Date(
+            release_date
+          ).toDateString()}`
+        );
+      }
     }
-    return {
-      min: accepted_releases[0].major + "." + accepted_releases[0].minor,
-      max:
+    if (accepted_releases.length)
+      return {
+        min: accepted_releases[0].major + "." + accepted_releases[0].minor,
+        max:
           accepted_releases[accepted_releases.length - 1].major +
           "." +
           accepted_releases[accepted_releases.length - 1].minor,
-    };
+      };
+    else
+      throw new Error(
+        `Could not find any releases for ${name} matching the criteria.`
+      );
   }
 
   async calc_nep29(packages) {
@@ -116,16 +149,17 @@ class NEP29Calculator {
       const months = core.getInput(`deprecate-${pkg.name}-after`);
       const min_releases = core.getInput(`min-${pkg.name}-releases`);
       core.debug(
-          `Determining versions for ${pkg.name} with a ${months} months / ${min_releases} releases policy.`
+        `Determining versions for ${pkg.name} with a ${months} months / ${min_releases} releases policy.`
       );
       try {
         const releases = await this.sorted_releases(pkg.name, pkg.repo);
 
         const min_max = await this.calc_releases(
-            releases,
-            months,
-            min_releases,
-            release_date
+          releases,
+          months,
+          min_releases,
+          release_date,
+          pkg.name
         );
         core.setOutput(`min-${pkg.name}`, min_max["min"]);
         core.setOutput(`max-${pkg.name}`, min_max["max"]);
@@ -135,18 +169,16 @@ class NEP29Calculator {
         }
       } catch (e) {
         throw new Error(
-            `Could not retrieve releases for '${pkg.name}' from github repository ${pkg.name}/${pkg.repo}:\n${e}`
+          `Could not retrieve releases for '${pkg.name}' from github repository ${pkg.name}/${pkg.repo}:\n${e}`
         );
       }
     }
   }
 }
 
-
 try {
   let token = core.getInput("token");
-  if (!token)
-    token = process.env.GITHUB_TOKEN;
+  if (!token) token = process.env.GITHUB_TOKEN;
   if (!token) {
     core.setFailed(
       "You need to provide the GITHUB API token (available as ${{ secrets.GITHUB_TOKEN }}) as " +
@@ -163,9 +195,7 @@ try {
       { name: "python", repo: "cpython" },
       { name: "numpy", repo: "numpy" },
     ];
-    calculator.calc_nep29(packages).catch((r) =>
-      core.setFailed(r)
-    );
+    calculator.calc_nep29(packages).catch((r) => core.setFailed(r));
   }
 } catch (error) {
   core.setFailed(error.message);
