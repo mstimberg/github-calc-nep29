@@ -10,6 +10,7 @@ jobs:
         id: nep29
         with:
             token: ${{ secrets.GITHUB_TOKEN }}
+            include-release-candidates: true
       - name: Get the minimum/maximum Python and numpy versions
         run: |
           echo "Using output from previous step:"

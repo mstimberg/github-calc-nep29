@@ -33,6 +33,10 @@ The Python/numpy versions are always available as outputs of the GitHub Action s
 be exported as environment variables, except if this option is set to `false`. Note that environment variables use
 underscores where the outputs use hyphens, e.g. `MIN_PYTHON` instead of `min-python`.
 
+### `include-release-candidates`
+
+When set to `true`, release candidates (i.e. versions like `3.11.0rc1`) will also be considered when determining the `max-version`.
+
 ### `deprecate-python-after`
 
 The cutoff (in months) for previous minor versions of Python to support. Defaults to 42.
