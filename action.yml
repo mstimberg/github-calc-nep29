@@ -1,6 +1,10 @@
 name: 'Calculate NEP29'
 description: 'Calculate Python + numpy releases according to NEP 29'
 inputs:
+    include-release-candidates:
+        description: 'Include release candidates in max versions? Defaults to false.'
+        required: false
+        default: false
     deprecate-python-after:
         description: 'Deprecate Python releases after how many months? Defaults to 42.'
         required: false
