@@ -42,7 +42,7 @@ outputs:
     max-numpy:
         description: 'the maximal (newest) numpy version that should be supported'
 runs:
-    using: 'node12'
+    using: 'node16'
     main: 'dist/index.js'
 
 branding:
