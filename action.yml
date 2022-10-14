@@ -28,7 +28,7 @@ inputs:
     export-to-env:
         description: 'Whether to export environment variables in addition to setting the action output. Defaults to true.'
         required: false
-        default: 'true'
+        default: true
     token:
         description: 'The GitHub API token'
         required: true

@@ -262,13 +262,13 @@ try {
         "the token argument, or store it in an environment variable named GITHUB_TOKEN."
     );
   } else {
-    const export_to_env = core.getInput("export-to-env");
-    const include_rc = core.getInput("include-release-candidates");
+    const export_to_env = core.getInput("export-to-env").toLowerCase() === 'true';
+    const include_rc = core.getInput("include-release-candidates").toLowerCase() === 'true';
     if (include_rc) {
         core.debug("Including release candidates in max-version")
     }
     const octokit = new Octokit({
-      userAgent: "github-check-nep29 v0.1",
+      userAgent: "github-check-nep29 v0.5",
       auth: token,
     });
     const calculator = new NEP29Calculator(octokit, export_to_env, include_rc);
