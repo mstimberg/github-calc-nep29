@@ -10801,13 +10801,15 @@ class NEP29Calculator {
   /**
    * Extract the date and the minor/major version for a GitHub release by checking the commit associated with it.
    * @param {object} r - A "release" object from the GitHub API
+   * @param {string} org - The name of the organization on GitHub (e.g. "python")
+   * @param {string} repo - The name of the repository on GitHub (e.g. "cpython")
    * @returns {Promise<{date: string, major: string, minor: string}>}
    * @async
    */
-  async name_and_date(r) {
+  async name_and_date(r, org, repo) {
     const commit = await this.octokit.rest.repos.getCommit({
-      owner: "python",
-      repo: "cpython",
+      owner: org,
+      repo: repo,
       ref: r.commit.sha,
     });
     const name = r.name.substring(1);
@@ -10843,7 +10845,7 @@ class NEP29Calculator {
           x.name = x.tag_name;
           return x;
         })
-        .filter((r) => first_release(r.name))
+        .filter((r) => first_release(r.name, this.include_rc, this.include_beta))
         .map(function (r) {
           const parts = r.name.substring(1).split(".");
           return { major: parts[0], minor: parts[1], date: r.published_at };
@@ -10865,7 +10867,7 @@ class NEP29Calculator {
       const reduced = await Promise.all(
         tags
           .filter((r) => first_release(r.name, this.include_rc, this.include_beta))
-          .map((x) => this.name_and_date(x))
+          .map((x) => this.name_and_date(x, org, repo))
       );
       reduced.sort((r1, r2) => r1.minor - r2.minor);
       return reduced;
