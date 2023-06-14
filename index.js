@@ -19,14 +19,17 @@ function ms_to_months(ms) {
 /**
  * Check whether a tag corresponds to a first minor release (e.g. 3.9.0).
  * @param {string} tag_name - The tag name
- * @param {boolean} include_rc - Whether to accept .0rc* releases as well
+ * @param {boolean} include_rc - Whether to accept .0rc* releases
+ * @param {boolean} include_beta - Whether to accept .0b* releases
  * @returns {boolean} Whether the tag corresponds to a .0 release
  */
-function first_release(tag_name, include_rc) {
+function first_release(tag_name, include_rc, include_beta) {
   if (tag_name[0] !== "v") return false;
   const name = tag_name.substring(1);
   const split_name = name.split(".");
   if (include_rc && split_name.length === 3 && split_name[2].startsWith("0rc"))
+    return true;
+  if (include_beta && split_name.length === 3 && split_name[2].startsWith("0b"))
     return true;
   return split_name[2] === "0";
 }
@@ -59,10 +62,11 @@ class NEP29Calculator {
    * @param {boolean} inclure_rc - Whether to include release candidates in the max version.
    * @constructor
    */
-  constructor(octokit, export_to_env, include_rc) {
+  constructor(octokit, export_to_env, include_rc, include_beta) {
     this.octokit = octokit;
     this.export_to_env = export_to_env;
     this.include_rc = include_rc;
+    this.include_beta = include_beta
   }
 
   /**
@@ -89,6 +93,8 @@ class NEP29Calculator {
   /**
    * Determine a list of all .0 releases for a project on GitHub.
    * If include_rc is set, this will also include the most recent .0rc* version.
+   * Similarly, if include_beta is set, this will also include the most recent
+   * .0b* version.
    * @param {string} org - The name of the organization on GitHub (e.g. "python")
    * @param {string} repo - The name of the repository on GitHub (e.g. "cpython")
    * @returns {Promise<unknown[]|*>}
@@ -129,7 +135,7 @@ class NEP29Calculator {
       );
       const reduced = await Promise.all(
         tags
-          .filter((r) => first_release(r.name, this.include_rc))
+          .filter((r) => first_release(r.name, this.include_rc, this.include_beta))
           .map((x) => this.name_and_date(x))
       );
       reduced.sort((r1, r2) => r1.minor - r2.minor);
@@ -264,14 +270,18 @@ try {
   } else {
     const export_to_env = core.getInput("export-to-env").toLowerCase() === 'true';
     const include_rc = core.getInput("include-release-candidates").toLowerCase() === 'true';
+    const include_beta = core.getInput("include-beta-releases").toLowerCase() == 'true';
     if (include_rc) {
         core.debug("Including release candidates in max-version")
+    }
+    if (include_beta) {
+        core.debug("Including beta releases in max-version")
     }
     const octokit = new Octokit({
       userAgent: "github-check-nep29 v0.5",
       auth: token,
     });
-    const calculator = new NEP29Calculator(octokit, export_to_env, include_rc);
+    const calculator = new NEP29Calculator(octokit, export_to_env, include_rc, include_beta);
     const packages = [
       { name: "python", repo: "cpython" },
       { name: "numpy", repo: "numpy" },

@@ -37,6 +37,10 @@ underscores where the outputs use hyphens, e.g. `MIN_PYTHON` instead of `min-pyt
 
 When set to `true`, release candidates (i.e. versions like `3.11.0rc1`) will also be considered when determining the `max-version`.
 
+### `include-beta-releases`
+
+When set to `true`, beta versions (i.e. versions like `3.11.0b2`) will also be considered when determining the `max-version`.
+
 ### `deprecate-python-after`
 
 The cutoff (in months) for previous minor versions of Python to support. Defaults to 42.
