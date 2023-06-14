@@ -88,7 +88,7 @@ jobs:
     name: Test calc-NEP29 action
     steps:
       - name: Calculate NEP29 releases
-        uses: mstimberg/github-calc-nep29@v0.2
+        uses: mstimberg/github-calc-nep29@v0.6
         id: nep29
         with:
             token: ${{ secrets.GITHUB_TOKEN }}
@@ -118,7 +118,7 @@ jobs:
     steps:
       - name: "calculate versions according to NEP29"
         id: nep29
-        uses: mstimberg/github-calc-nep29@v0.2
+        uses: mstimberg/github-calc-nep29@v0.6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 

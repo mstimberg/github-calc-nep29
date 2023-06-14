@@ -280,7 +280,7 @@ try {
         core.debug("Including beta releases in max-version")
     }
     const octokit = new Octokit({
-      userAgent: "github-check-nep29 v0.5",
+      userAgent: "github-check-nep29 v0.6",
       auth: token,
     });
     const calculator = new NEP29Calculator(octokit, export_to_env, include_rc, include_beta);
