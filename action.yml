@@ -47,7 +47,7 @@ outputs:
         description: 'the maximal (newest) numpy version that should be supported'
 runs:
     using: 'node24'
-    main: 'dist/index.js'
+    main: 'dist/index.cjs'
 
 branding:
     icon: 'hash'
