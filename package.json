@@ -3,9 +3,10 @@
   "version": "0.7.0",
   "description": "GitHub Action to calculate [Python](https://python.org) and [numpy](https://numpy.org) release versions that should be supported according to [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html).",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "ncc build index.js -o dist --license licenses.txt"
+    "build": "esbuild index.js --bundle --platform=node --outfile=dist/index.js"
   },
   "keywords": [],
   "author": "Marcel Stimberg",
@@ -15,6 +16,6 @@
     "@octokit/rest": "^22.0.1"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.38.4"
+    "esbuild": "^0.25.12"
   }
 }

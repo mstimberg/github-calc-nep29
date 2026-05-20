@@ -1,5 +1,5 @@
-const core = require("@actions/core");
-const { Octokit } = require("@octokit/rest");
+import * as core from "@actions/core";
+import { Octokit } from "@octokit/rest";
 
 /** Number of ms in a day */
 const one_day_ms = 24 * 60 * 60 * 1000;
