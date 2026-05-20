@@ -1,0 +1,20 @@
+{
+  "name": "github-calc-nep29",
+  "version": "0.7.0",
+  "description": "GitHub Action to calculate [Python](https://python.org) and [numpy](https://numpy.org) release versions that should be supported according to [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html).",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "ncc build index.js -o dist --license licenses.txt"
+  },
+  "keywords": [],
+  "author": "Marcel Stimberg",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@octokit/rest": "^20.0.2"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.38.4"
+  }
+}
