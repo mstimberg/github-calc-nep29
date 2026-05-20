@@ -1,6 +1,6 @@
 {
   "name": "github-calc-nep29",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "GitHub Action to calculate [Python](https://python.org) and [numpy](https://numpy.org) release versions that should be supported according to [NEP 29](https://numpy.org/neps/nep-0029-deprecation_policy.html).",
   "main": "index.js",
   "type": "module",
